@@ -1,0 +1,105 @@
+experiment:
+  id: T1_SWI_to_50HZstiff
+  logdir: T1_SWI_to_50HZstiff
+  num_epochs: 1000
+  save_image_step: 1
+  print_step: 1
+  valid_step: 1
+  save_ckpt_step: 5
+  seed: 12501
+  gpu: 0
+  checkpoint: /home/junyi/projects/MRE/T1_SWI_to_50HZstiff/T1_SWI_to_50HZstiff_2023-08-31_10-51-49/ckpt_00000700.pt
+  best_ckpt_idle_epochs: 10
+
+data:
+  batch_size: 32
+  num_workers: 4
+  loading_order: ['T1', 'SWI', 'stiff']
+  negate_ind: []
+  apply_mask: false
+  datadict_indices:
+    input: [0, 1]
+    pred_truth: [2]
+  
+  center_slice_keys: [pred_truth]
+  data_dtypes:
+    mask: bool
+  saving_types:
+    mask: SaveJpgNorm
+  ext: '\.dat$'
+  image_reader:
+    type: ImageSlicesMemmap
+    kwargs:
+      target_shape: [160,160]
+      stack_size: 5
+  train:
+    dirname: /home/junyi/projects/MRE/Data/Memmap/train_T1_SWI_50Hz
+    transforms: 
+      - type: FlipLR
+      - type: Scale
+        kwargs:
+          scale: 1.5
+    shuffle: True
+  valid:
+    dirname: /home/junyi/projects/MRE/Data/Memmap/val_T1_SWI_50Hz
+    transforms: []
+    shuffle: False
+  test: {}
+
+model:
+  type: UNet
+  kwargs:
+    conv: Conv2d
+    td: AvgPool2d
+    in_channels: 10
+    first_channels: 16
+    num_trans_down: 5
+    branches: 1
+    out_channels: 1
+    norm:
+      type: BatchNorm2d
+      kwargs: {}
+    kernel_size: 3
+    padding: 1
+    dropout:
+      type: Dropout2d
+      kwargs:
+        p: 0.2
+    max_channels: 512
+    split_ebs: 2
+
+optim:
+  type: Adam
+  kwargs:
+    lr: 0.00005
+
+losses:
+  # l2:
+  #   type: MSELoss
+  #   input_keys: ['pred','pred_truth']
+  #   weight: 1
+  #   kwargs: {}
+  l1:
+    type: L1Loss
+    input_keys: ['pred', 'pred_truth']
+    weight: 0.001
+    kwargs: {}
+  ssimloss:
+    type: MSSSIMLoss_def
+    input_keys: ['pred', 'pred_truth']
+    weight: 1
+    kwargs: {}
+
+metrics:
+  psnr:
+    type: PSNR
+    input_keys: ['pred','pred_truth']
+    kwargs: {}
+
+log_formats:
+  lr: '.5e'
+  l2: '.5f'
+  l1: '.5f'
+  ssimloss: '.5f'
+  total_loss: '.5f'
+  psnr: '.5f'

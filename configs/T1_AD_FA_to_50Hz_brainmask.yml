@@ -1,0 +1,107 @@
+experiment:
+  id: T1_AD_FA_to_50HZstiff_brainmask
+  logdir: T1_AD_FA_to_50HZstiff_brainmask
+  num_epochs: 1000
+  save_image_step: 1
+  print_step: 1
+  valid_step: 1
+  save_ckpt_step: 10
+  seed: 12501
+  gpu: 0
+  checkpoint: /home/junyi/projects/MRE/T1_AD_FA_to_50HZstiff_brainmask/T1_AD_FA_to_50HZstiff_brainmask_2023-05-10_19-30-28/ckpt_00000500.pt
+  best_ckpt_idle_epochs: 10
+
+data:
+  batch_size: 32
+  num_workers: 4
+  loading_order: ['T1', 'AD', 'FA', 'stiff','brainmask']
+  negate_ind: []
+  apply_mask: true
+  datadict_indices:
+    input: [0, 1, 2]
+    pred_truth: [3]
+    mask: [4]
+  
+  center_slice_keys: [pred_truth, mask]
+  data_dtypes:
+    mask: bool
+  saving_types:
+    mask: SaveJpg
+  ext: '\.dat$'
+  image_reader:
+    type: ImageSlicesMemmap
+    kwargs:
+      target_shape: [160,160]
+      stack_size: 3
+  train:
+    dirname: /home/junyi/projects/MRE/Data/Memmap/train_T1_AD_FA_50Hz_brainmask
+    transforms:
+      - type: FlipLR
+      - type: Scale
+        kwargs:
+          scale: 1.2
+    shuffle: True
+  valid:
+    dirname: /home/junyi/projects/MRE/Data/Memmap/val_T1_AD_FA_50Hz_brainmask
+    transforms: []
+    shuffle: False
+  test: {}
+
+model:
+  type: UNet
+  kwargs:
+    conv: Conv2d
+    td: AvgPool2d
+    in_channels: 9
+    first_channels: 32
+    num_trans_down: 4
+    branches: 1
+    out_channels: 1
+    norm:
+      type: BatchNorm2d
+      kwargs: {}
+    kernel_size: 3
+    padding: 1
+    dropout:
+      type: Dropout2d
+      kwargs:
+        p: 0.2
+    max_channels: 512
+    split_ebs: 2
+
+
+optim:
+  type: Adam
+  kwargs:
+    lr: 0.0001
+
+losses:
+  l2:
+    type: MSELoss
+    input_keys: ['pred','pred_truth']
+    weight: 1.0
+    kwargs: {}
+  l1:
+    type: L1Loss
+    input_keys: ['pred', 'pred_truth']
+    weight: 0.32
+    kwargs: {}
+  ssim:
+    type: SSIMLoss_def
+    input_keys: ['pred', 'pred_truth']
+    weight: 1.68
+    kwargs: {}
+
+metrics:
+  psnr:
+    type: PSNR
+    input_keys: ['pred','pred_truth']
+    kwargs: {}
+
+log_formats:
+  lr: '.5e'
+  l2: '.5f'
+  l1: '.5f'
+  ssim: '.5f'
+  total_loss: '.5f'
+  psnr: '.5f'

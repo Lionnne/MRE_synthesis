@@ -1,0 +1,133 @@
+experiment:
+  id: T1_to_T2stiff
+  logdir: T1_to_T2stiff
+  num_epochs: 100
+  save_image_step: 1
+  print_step: 1
+  valid_step: 1
+  save_ckpt_step: 5
+  seed: 12501
+  gpu: 0
+  checkpoint: T1_to_T2stiff/T1_to_T2stiff_2024-03-12_22-28-37/ckpt_00000020.pt
+  best_ckpt_idle_epochs: 10
+
+data:
+  batch_size: 32
+  num_workers: 4
+  loading_order: ['T1',  'T2']
+  negate_ind: []
+  apply_mask: false
+  datadict_indices:
+    input: [0]
+    pred_truth: [1]
+  
+  center_slice_keys: [pred_truth]
+  data_dtypes:
+    mask: bool
+  saving_types:
+    mask: SaveJpg
+  ext: '\.dat$'
+  image_reader:
+    type: ImageSlicesMemmap
+    kwargs:
+      target_shape: [160, 160]
+      stack_size: 5
+  train:
+    dirname: /home/junyi/projects/MRE/Data/Memmap/train_all
+    transforms: 
+      - type: FlipLR
+      - type: Scale
+        kwargs:
+          scale: 1.5
+    shuffle: True
+  valid:
+    dirname: /home/junyi/projects/MRE/Data/Memmap/val_all
+    transforms: []
+    shuffle: False
+  test: {}
+
+model:
+  type: UNet
+  kwargs:
+    conv: Conv2d
+    td: AvgPool2d
+    in_channels: 5
+    first_channels: 16
+    num_trans_down: 5
+    branches: 1
+    out_channels: 1
+    norm:
+      type: GroupNorm
+      kwargs:
+        num_groups: 1
+    kernel_size: 3
+    padding: 1
+    dropout:
+      type: Dropout2d
+      kwargs:
+        p: 0
+    max_channels: 512
+    split_ebs: 2
+
+
+
+optim:
+  type: Adam
+  kwargs:
+    lr: 0.00001
+
+losses:
+  # percep:
+  #   type: VGGPerceptualLoss
+  #   input_keys: ['pred','pred_truth']
+  #   weight: 1
+  #   kwargs: {}
+  l2:
+    type: MSELoss
+    input_keys: ['pred','pred_truth']
+    weight: 1
+    kwargs: {}
+  # l2_mre:
+  #   type: MSELoss_mre
+  #   input_keys: ['pred','pred_truth']
+  #   weight: 1
+  #   kwargs: {}
+  # l1:
+  #   type: L1Loss
+  #   input_keys: ['pred','pred_truth']
+  #   weight: 0.5
+  #   kwargs: {}
+  # l1_mre:
+  #   type: L1Loss_mre
+  #   input_keys: ['pred','pred_truth']
+  #   weight: 0.5
+  #   kwargs: {}
+  # ssim:
+  #   type: MSSSIMLoss_def
+  #   input_keys: ['pred', 'pred_truth']
+  #   weight: 1
+  #   kwargs: {}
+  
+
+metrics:
+  psnr:
+    type: PSNR
+    input_keys: ['pred','pred_truth']
+    kwargs: {}
+  psnr_mre:
+    type: PSNR_mre
+    input_keys: ['pred','pred_truth']
+    kwargs: {}
+
+log_formats:
+  lr: '.5e'
+  l2: '.5f'
+  l1: '.5f'
+  l2_mre: '.5f'
+  l1_mre: '.5f'
+  ssim: '.5f'
+  mix: '.5f'
+  percep: '.5f'
+  total_loss: '.5f'
+  psnr: '.5f'
+  psnr_mre: '.5f'

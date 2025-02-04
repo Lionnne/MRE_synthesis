@@ -1,0 +1,103 @@
+data:
+  apply_mask: true
+  batch_size: 32
+  center_slice_keys:
+  - pred_truth
+  - mask
+  data_dtypes:
+    mask: bool
+  datadict_indices:
+    input:
+    - 0
+    mask:
+    - 1
+  ext: \.dat$
+  image_reader:
+    kwargs:
+      stack_size: 3
+      target_shape:
+      - 160
+      - 160
+    type: ImageSlicesMemmap
+  loading_order:
+  - T1
+  - brainmask
+  negate_ind: []
+  num_workers: 4
+  saving_types:
+    mask: SaveJpg
+  test: {}
+  train:
+    dirname: /home/junyi/projects/MRE/Data/Memmap/train_T1_50Hz_brainmask_memmap
+    shuffle: true
+    transforms: []
+  valid:
+    dirname: /home/junyi/projects/MRE/Data/Memmap/val_T1_50Hz_brainmask_memmap
+    shuffle: false
+    transforms: []
+# experiment:
+#   best_ckpt_idle_epochs: 10
+#   checkpoint: null
+#   gpu: 0
+#   id: T1_to_50HZstiff_brainmask
+#   logdir: T1_to_50HZstiff_brainmask/T1_to_50HZstiff_brainmask_2023-05-04_09-27-50
+#   num_epochs: 600
+#   print_step: 1
+#   save_ckpt_step: 10
+#   save_image_step: 1
+#   seed: 12501
+#   valid_step: 1
+# log_formats:
+#   l1: .5f
+#   l2: .5f
+#   lr: .5e
+#   psnr: .5f
+#   total_loss: .5f
+# losses:
+#   l1:
+#     input_keys:
+#     - pred
+#     - pred_truth
+#     kwargs: {}
+#     type: L1Loss
+#     weight: 1.0
+#   l2:
+#     input_keys:
+#     - pred
+#     - pred_truth
+#     kwargs: {}
+#     type: MSELoss
+#     weight: 1.0
+# metrics:
+#   psnr:
+#     input_keys:
+#     - pred
+#     - pred_truth
+#     kwargs: {}
+#     type: PSNR
+model:
+  kwargs:
+    branches: 1
+    conv: Conv2d
+    dropout:
+      kwargs:
+        p: 0.2
+      type: Dropout2d
+    first_channels: 32
+    in_channels: 3
+    kernel_size: 3
+    max_channels: 512
+    norm:
+      kwargs:
+        num_groups: 1
+      type: GroupNorm
+    num_trans_down: 3
+    out_channels: 1
+    padding: 1
+    split_ebs: 2
+    td: AvgPool2d
+  type: UNet
+# optim:
+#   kwargs:
+#     lr: 0.0001
+#   type: Adam

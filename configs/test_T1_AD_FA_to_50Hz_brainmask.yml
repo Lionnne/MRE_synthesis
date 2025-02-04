@@ -1,0 +1,118 @@
+data:
+  apply_mask: true
+  batch_size: 32
+  center_slice_keys:
+  - pred_truth
+  - mask
+  data_dtypes:
+    mask: bool
+  datadict_indices:
+    input:
+    - 0
+    - 1
+    - 2
+    mask:
+    - 3
+  ext: \.dat$
+  image_reader:
+    kwargs:
+      stack_size: 3
+      target_shape:
+      - 160
+      - 160
+    type: ImageSlicesMemmap
+  loading_order:
+  - T1
+  - AD
+  - FA
+  - brainmask
+  negate_ind: []
+  num_workers: 4
+  saving_types:
+    mask: SaveJpg
+  test: {}
+  train:
+    dirname: /home/junyi/projects/MRE/Data/Memmap/train_T1_AD_FA_50Hz_brainmask
+    shuffle: true
+    transforms:
+    - type: FlipLR
+    - kwargs:
+        scale: 1.2
+      type: Scale
+  valid:
+    dirname: /home/junyi/projects/MRE/Data/Memmap/val_T1_AD_FA_50Hz_brainmask
+    shuffle: false
+    transforms: []
+# experiment:
+#   best_ckpt_idle_epochs: 10
+#   checkpoint: null
+#   gpu: 0
+#   id: T1_AD_FA_to_50HZstiff_brainmask
+#   logdir: T1_AD_FA_to_50HZstiff_brainmask/T1_AD_FA_to_50HZstiff_brainmask_2023-05-10_19-30-28
+#   num_epochs: 500
+#   print_step: 1
+#   save_ckpt_step: 10
+#   save_image_step: 1
+#   seed: 12501
+#   valid_step: 1
+# log_formats:
+#   l1: .5f
+#   l2: .5f
+#   lr: .5e
+#   psnr: .5f
+#   ssim: .5f
+#   total_loss: .5f
+# losses:
+#   l1:
+#     input_keys:
+#     - pred
+#     - pred_truth
+#     kwargs: {}
+#     type: SmoothL1Loss
+#     weight: 0.16
+#   l2:
+#     input_keys:
+#     - pred
+#     - pred_truth
+#     kwargs: {}
+#     type: MSELoss
+#     weight: 1.0
+#   ssim:
+#     input_keys:
+#     - pred
+#     - pred_truth
+#     kwargs: {}
+#     type: SSIMLoss
+#     weight: 0.84
+# metrics:
+#   psnr:
+#     input_keys:
+#     - pred
+#     - pred_truth
+#     kwargs: {}
+#     type: PSNR
+model:
+  kwargs:
+    branches: 1
+    conv: Conv2d
+    dropout:
+      kwargs:
+        p: 0.2
+      type: Dropout2d
+    first_channels: 32
+    in_channels: 9
+    kernel_size: 3
+    max_channels: 512
+    norm:
+      kwargs: {}
+      type: BatchNorm2d
+    num_trans_down: 4
+    out_channels: 1
+    padding: 1
+    split_ebs: 2
+    td: AvgPool2d
+  type: UNet
+# optim:
+#   kwargs:
+#     lr: 0.0005
+#   type: Adam
